@@ -1,0 +1,10 @@
+services:
+  http_middleware.restrict:
+    class: Drupal\ip_restrict\Services\RestrictMiddleware
+    arguments: [ @restrict.manager ]
+    tags:
+      - { name: http_middleware }
+
+  restrict.manager:
+    class: Drupal\ip_restrict\RestrictManager
+    arguments: [ @settings ]

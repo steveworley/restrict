@@ -1,0 +1,13 @@
+{
+  "name": "drupal/ip_restrict",
+  "description":" HTTP Middleware to handle IP restrictions",
+  "minimum-stability": "stable",
+  "license": "GPL2",
+  "authors": [
+    {
+      "name": "Steve Worley",
+      "email": "steven.worley@acquia.com"
+    }
+  ],
+  "type": "drupal-module",
+}

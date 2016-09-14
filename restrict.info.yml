@@ -1,0 +1,6 @@
+name: Restrict
+description: Restrict access to the site based on configuration options.
+package: middleware
+
+core: 8.x
+type: module
