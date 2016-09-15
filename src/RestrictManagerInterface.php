@@ -7,29 +7,31 @@
 
 namespace Drupal\restrict;
 
-interface IpRestrictManager {
+use Symfony\Component\HttpFoundation\Request;
 
-  public function setRequest();
+interface RestrictManagerInterface {
+
+  function setRequest(Request $request);
 
   /**
    * Determines if the request path is restricted.
    *
    * @return boolean
    */
-  public function isRestrictedPath(string $path = NULL);
+  function isRestrictedPath($path = NULL);
 
   /**
    * Determins if the request IP is restricted.
    *
    * @return boolean
    */
-  public function isRestrictedIP(string $ip = NULL);
+  function isRestrictedIP($ip = NULL);
 
   /**
    * [basicAuth description]
-   * 
+   *
    * @return boolean
    */
-  public function isAuthorised();
+  function isAuthorised();
 
 }

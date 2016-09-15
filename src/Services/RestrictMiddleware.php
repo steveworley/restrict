@@ -10,7 +10,7 @@ use Drupal\Component\Utility\SafeMarkup;
 /**
  * Provides support for IP restrictions.
  */
-class IpRestrictMiddleware implements HttpKernelInterface {
+class RestrictMiddleware implements HttpKernelInterface {
 
   /**
    * The decorated kernel.
@@ -43,30 +43,26 @@ class IpRestrictMiddleware implements HttpKernelInterface {
    * {@inheritdoc}
    */
   public function handle(Request $request, $type = self::MASTER_REQUEST, $catch = TRUE) {
-    $ip = $request->getClientIp();
-    $path = $request->getRequestUri();
 
     if (PHP_SAPI === 'cli') {
       // Don't apply restrictions to cli requests ie. Drush.
       return $this->httpKernel->handle($request, $type, $catch);
     }
 
+    // Set the RestrictManager request context.
+    $this->manager->setRequest($request);
+
     if (!$this->manager->isAuthorised()) {
       return new Response(SafeMarkup::format('401 Unauthorized: Access Denied (@ip)', ['@ip' => $ip]), 401);
     }
 
-    $ip_restricted = $this->manager->isRestrictedIP($ip)
-
-    if ($ip_restricted == RestrictManager::RESTRICT_NOT_FOUND) {
-      return new Response(SafeMarkup::format('<h1>Not Found</h1><p>The requested URL @path was not found on this server.</p>', ['@path' => $path]), 404);
-    }
-
-    if ($ip_restricted == RestrictManager::RESTRICT_UNAUTHORISED) {
-      return new Response(SafeMarkup::format('403 Forbidden: Access Deined (@ip)', ['@ip' => $ip]), 403);
-    }
-
-    if ($this->manager->isRestrictedPath($path)) {
-      return new Response(SafeMarkup::format('403 Forbidden: Access Deined (@ip)', ['@ip' => $ip]), 403);
+    switch ($this->manager->isRestricted()) {
+      case RestrictManager::RESTRICT_NOT_FOUND:
+        return new Response(SafeMarkup::format('<h1>Not Found</h1><p>The requested URL @path was not found on this server.</p>', ['@path' => $path]), 404);
+        break;
+      case RestrictManager::RESTRICT_UNAUTHORISED:
+        return new Response(SafeMarkup::format('403 Forbidden: Access Deined (@ip)', ['@ip' => $ip]), 403);
+        break;
     }
 
     // Process the request normally.

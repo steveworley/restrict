@@ -4,14 +4,18 @@ namespace Drupal\restrict;
 
 use Drupal\Core\Site\Settings;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\RouteCollection;
-use Symfony\Component\Routing\Matcher\UrlMatcher;
-use Symfony\Component\Routing\Route;
 
 class RestrictManager implements RestrictManagerInterface {
 
   const RESTRICT_NOT_FOUND = -1;
   const RESTRICT_UNAUTHORISED = -2;
+
+  /**
+   * A Request object.
+   *
+   * @var Symfony\Component\HttpFoundation\Request.
+   */
+  protected $request;
 
   /**
    * The site settings.
@@ -31,10 +35,19 @@ class RestrictManager implements RestrictManagerInterface {
   }
 
   /**
+   * [setRequest description]
+   * @param Request $request [description]
+   */
+  public function setRequest(Request $request) {
+    $this->request = $request;
+    return $this;
+  }
+
+  /**
    * [getWhitelist description]
    * @return [type] [description]
    */
-  public function getWhitelist() {
+  protected function getWhitelist() {
     return $this->settings->get('ah_whitelist', []);
   }
 
@@ -42,7 +55,7 @@ class RestrictManager implements RestrictManagerInterface {
    * [getBlacklist description]
    * @return [type] [description]
    */
-  public function getBlacklist() {
+  protected function getBlacklist() {
     return $this->settings->get('ah_blacklist', []);
   }
 
@@ -50,7 +63,7 @@ class RestrictManager implements RestrictManagerInterface {
    * [getAuth description]
    * @return [type] [description]
    */
-  public function getAuth() {
+  protected function getAuth() {
     return $this->settings->get('ah_basic_auth_credentials', []);
   }
 
@@ -58,55 +71,59 @@ class RestrictManager implements RestrictManagerInterface {
    * [getDeniedNotFound description]
    * @return [type] [description]
    */
-  public function getDeniedNotFound() {
-    return $this->settings->get('ah_denied_not_found') ? self::RESTRICT_NOT_FOUND : self::RESTRICT_UNAUTHORISED
+  protected function getDeniedNotFound() {
+    return $this->settings->get('ah_denied_not_found') ? self::RESTRICT_NOT_FOUND : self::RESTRICT_UNAUTHORISED;
   }
 
   /**
    * [getRestrictedPaths description]
    * @return [type] [description]
    */
-  public function getRestrictedPaths() {
-    $routes = $this->settings->get('ah_restricted_paths', []);
-    $collection = new RouteCollection();
-
-    foreach ($routes as &$route) {
-      $obj = new Route($route);
-      $collection->add($route, $obj);
-    }
-
-    return $collection;
+  protected function getRestrictedPaths() {
+    return $this->settings->get('ah_restricted_paths', []);
   }
 
-  /**
-   * [isRestrictedIP description]
-   * @return boolean [description]
-   */
-  public function isRestrictedIP(string $ip = NULL) {
-    $whitelist = $this->getWhitelist();
-    $blacklist = $this->getBlacklist();
+  public function isRestricted() {
+    $ip = $this->request->getClientIp();
+    $path = $this->request->getCurrentRoute();
 
     if (empty($ip)) {
-      // All requests should have an IP address.
-      return $this->getDeniedNotFound();
+      return self::RESTRICT_UNAUTHORISED;
     }
 
-    if (self::isIpInList($ip, $whitelist)) {
-      return FALSE;
+    if ($this->isRestrictedIP($ip)) {
+      return self::RESTRICT_UNAUTHORISED;
     }
 
-    if (!self::isIpInList($ip, $blacklist)) {
-      return $this->getDeniedNotFound();
+    if ($this->isRestrictedPath($path)) {
+      return self::RESTRICT_UNAUTHORISED;
     }
 
     return FALSE;
   }
 
   /**
+   * [isRestrictedIP description]
+   * @return boolean [description]
+   */
+  public function isRestrictedIP($ip = NULL) {
+    $whitelist = $this->getWhitelist();
+    $blacklist = $this->getBlacklist();
+
+    if ($this->isIpInList($ip, $whitelist)) {
+      // If the IP is in the whitelist; we do not have a restricted IP.
+      return FALSE;
+    }
+
+    // If the IP is in the blacklist we have a restricted IP.
+    return $this->isIpInList($ip, $blacklist);
+  }
+
+  /**
    * [isRestrictedPath description]
    * @return boolean [description]
    */
-  public function isRestrictedPath(string $path = NULL) {
+  public function isRestrictedPath($path = NULL) {
     $matcher = UrlMatcher($this->getRestrictedPaths());
     return (bool) $matcher->match($path);
   }
@@ -137,7 +154,7 @@ class RestrictManager implements RestrictManagerInterface {
    * @param  [type]  $ip_list [description]
    * @return boolean          [description]
    */
-  public static function isIpInList($ip, $ip_list) {
+  protected static function isIpInList($ip, $list) {
     foreach ($list as $item) {
       // Match IPs in CIDR format.
       if (strpos($item, '/') !== false) {
