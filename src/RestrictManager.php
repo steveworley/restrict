@@ -2,6 +2,7 @@
 
 namespace Drupal\restrict;
 
+use Drupal\Core\Path\PathMatcherInterface;
 use Drupal\Core\Site\Settings;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -9,152 +10,176 @@ class RestrictManager implements RestrictManagerInterface {
 
   const RESTRICT_NOT_FOUND = -1;
   const RESTRICT_UNAUTHORISED = -2;
+  const RESTRICT_FORBIDDEN = -3;
 
   /**
    * A Request object.
    *
-   * @var Symfony\Component\HttpFoundation\Request.
+   * @var \Symfony\Component\HttpFoundation\Request
    */
   protected $request;
 
   /**
    * The site settings.
    *
-   * @var Drupal\Core\Site\Settings.
+   * @var \Drupal\Core\Site\Settings.
    */
   protected $settings;
 
   /**
+   * The site settings.
+   *
+   * @var \Drupal\Core\Path\PathMatcherInterface.
+   */
+  protected $pathMatcher;
+
+  /**
    * Construct the RestrictManager object.
    *
-   * @param Settings $settings
+   * @param \Drupal\Core\Site\Settings $settings
    *   Site settings.
+   * @param \Drupal\Core\Path\PathMatcherInterface $matcher
+   *   The path matcher class.
    */
-  public function __construct(Settings $settings) {
+  public function __construct(Settings $settings, PathMatcherInterface $matcher) {
     $this->settings = $settings;
+    $this->pathMatcher = $matcher;
   }
 
   /**
    * [setRequest description]
-   * @param Request $request [description]
+   * @param Request $request
    */
   public function setRequest(Request $request) {
     $this->request = $request;
-    return $this;
   }
 
   /**
    * [getWhitelist description]
-   * @return [type] [description]
+   * @return array [description]
    */
   protected function getWhitelist() {
-    return $this->settings->get('ah_whitelist', []);
+    return $this->settings->get('restrict_whitelist', []);
   }
 
   /**
    * [getBlacklist description]
-   * @return [type] [description]
+   * @return array [description]
    */
   protected function getBlacklist() {
-    return $this->settings->get('ah_blacklist', []);
+    return $this->settings->get('restrict_blacklist', []);
   }
 
   /**
-   * [getAuth description]
-   * @return [type] [description]
+   * [getBasicAuthCredentials description]
+   * @return array [description]
    */
-  protected function getAuth() {
-    return $this->settings->get('ah_basic_auth_credentials', []);
-  }
-
-  /**
-   * [getDeniedNotFound description]
-   * @return [type] [description]
-   */
-  protected function getDeniedNotFound() {
-    return $this->settings->get('ah_denied_not_found') ? self::RESTRICT_NOT_FOUND : self::RESTRICT_UNAUTHORISED;
+  protected function getBasicAuthCredentials() {
+    return $this->settings->get('restrict_basic_auth_credentials', []);
   }
 
   /**
    * [getRestrictedPaths description]
-   * @return [type] [description]
+   * @return array
    */
   protected function getRestrictedPaths() {
-    return $this->settings->get('ah_restricted_paths', []);
+    return $this->settings->get('restrict_restricted_paths', []);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function isRestricted() {
+
+    $response_code = $this->settings->get('restrict_response_code', self::RESTRICT_FORBIDDEN);
+    $trusted_proxies = $this->settings->get('restrict_trusted_proxies', []);
+    if (!empty($trusted_proxies)) {
+      $this->request->setTrustedProxies($trusted_proxies);
+    }
+    else {
+      $this->request->setTrustedProxies(array($this->request->server->get('REMOTE_ADDR')));
+    }
+
     $ip = $this->request->getClientIp();
-    $path = $this->request->getCurrentRoute();
 
     if (empty($ip)) {
-      return self::RESTRICT_UNAUTHORISED;
+      return $response_code;
     }
 
-    if ($this->isRestrictedIP($ip)) {
-      return self::RESTRICT_UNAUTHORISED;
+    if ($this->isRestrictedIp($ip)) {
+      return $response_code;
     }
 
-    if ($this->isRestrictedPath($path)) {
-      return self::RESTRICT_UNAUTHORISED;
+    // @TODO do we want to check for restricted routes?
+    if ($this->isRestrictedPath($this->request->getPathInfo())) {
+//      $config['system.performance']['cache']['page']['max_age'] = 0;
+
+      return $response_code;
     }
 
-    return FALSE;
+    return false;
+  }
+
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isRestrictedIp($ip) {
+
+    // If the IP is in the whitelist, we do not have a restricted IP.
+    if ($this->isIpInList($ip, $this->getWhitelist())) {
+      return false;
+    }
+
+    // If the IP is in the blacklist, we have a restricted IP.
+    return $this->isIpInList($ip, $this->getBlacklist());
   }
 
   /**
-   * [isRestrictedIP description]
-   * @return boolean [description]
+   * {@inheritdoc}
    */
-  public function isRestrictedIP($ip = NULL) {
-    $whitelist = $this->getWhitelist();
-    $blacklist = $this->getBlacklist();
+  public function isRestrictedPath($path) {
+    // @TODO do we want to use a strtolower here? e.g. $pages = Unicode::strtolower($this->configuration['pages']);
 
-    if ($this->isIpInList($ip, $whitelist)) {
-      // If the IP is in the whitelist; we do not have a restricted IP.
-      return FALSE;
-    }
+    // We have to convert the array into a set of patterns separated by a newline.
+    $restrictedPaths = implode("\n", $this->getRestrictedPaths());
 
-    // If the IP is in the blacklist we have a restricted IP.
-    return $this->isIpInList($ip, $blacklist);
+    return $this->pathMatcher->matchPath($path, $restrictedPaths);
   }
 
   /**
-   * [isRestrictedPath description]
-   * @return boolean [description]
+   * {@inheritdoc}
    */
-  public function isRestrictedPath($path = NULL) {
-    $matcher = UrlMatcher($this->getRestrictedPaths());
-    return (bool) $matcher->match($path);
-  }
+  public function isAuthorised($username = NULL, $password = NULL) {
 
-  /**
-   * [isAuthorised description]
-   * @return boolean [description]
-   */
-  public function isAuthorised($user = NULL, $pass = NULL) {
-    $basic_auth = $this->getAuth();
+    $allowedCredentials = $this->getBasicAuthCredentials();
 
     // Basic auth has not been configured for this site.
-    if (empty($basic_auth)) {
-      return TRUE;
+    if (empty($allowedCredentials)) {
+      return true;
     }
 
-    // Test to see if the user is valid with the credentials provided.
-    if (isset($basic_auth[$user]) && $basic_auth[$user] == $pass) {
-      return TRUE;
+    $username = $this->request->headers->get('PHP_AUTH_USER');
+    $password = $this->request->headers->get('PHP_AUTH_PW');
+
+    if (isset($username) && isset($password)) {
+      foreach ($allowedCredentials as $phpAuthUser => $phpAuthPassword) {
+        if ($username == $phpAuthUser && $password == $phpAuthPassword) {
+          return true;
+        }
+      }
     }
 
-    return FALSE;
+    return false;
   }
 
   /**
    * [isIpInList description]
-   * @param  [type]  $ip      [description]
-   * @param  [type]  $ip_list [description]
+   * @param  string  $ip      [description]
+   * @param  array  $list [description]
    * @return boolean          [description]
    */
-  protected static function isIpInList($ip, $list) {
+  protected static function isIpInList($ip, Array $list) {
     foreach ($list as $item) {
       // Match IPs in CIDR format.
       if (strpos($item, '/') !== false) {
@@ -190,14 +215,14 @@ class RestrictManager implements RestrictManagerInterface {
           continue;
         }
         if ($start_dec <= $ip_dec && $ip_dec <= $end_dec) {
-          return TRUE;
+          return true;
         }
       }
       // Match against single IPs
       elseif ($ip === $item) {
-        return TRUE;
+        return true;
       }
     }
-    return FALSE;
+    return false;
   }
 }

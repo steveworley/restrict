@@ -18,20 +18,27 @@ interface RestrictManagerInterface {
    *
    * @return boolean
    */
-  function isRestrictedPath($path = NULL);
+  function isRestrictedPath($path);
 
   /**
-   * Determins if the request IP is restricted.
+   * Determines if the request IP is restricted.
    *
    * @return boolean
    */
-  function isRestrictedIP($ip = NULL);
+  function isRestrictedIp($ip);
 
   /**
-   * [basicAuth description]
+   * Negotiates a basic authentication check.
    *
    * @return boolean
    */
   function isAuthorised();
+
+  /**
+   * Determines if the IP or path is restricted for the user.
+   *
+   * @return boolean
+   */
+  function isRestricted();
 
 }
