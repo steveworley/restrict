@@ -48,12 +48,21 @@ class RestrictMiddleware implements HttpKernelInterface {
   }
 
   /**
+   * Abstract CLI check for unit test mocking.
+   *
+   * @return boolean
+   */
+  public function isCli() {
+    return PHP_SAPI === 'cli';
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function handle(Request $request, $type = self::MASTER_REQUEST, $catch = TRUE) {
 
     // Don't apply restrictions to cli requests ie. Drush.
-    if (PHP_SAPI === 'cli') {
+    if ($this->isCli()) {
       // Don't apply restrictions to cli requests ie. Drush.
       return $this->httpKernel->handle($request, $type, $catch);
     }
