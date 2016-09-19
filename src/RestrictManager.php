@@ -36,25 +36,16 @@ class RestrictManager implements RestrictManagerInterface {
   protected $rules;
 
   /**
-   * The site settings.
-   *
-   * @var \Drupal\Core\Path\PathMatcherInterface.
-   */
-  protected $pathMatcher;
-
-  /**
    * Construct the RestrictManager object.
    *
    * @param \Drupal\Core\Site\Settings $settings
    *   Site settings.
-   * @param \Drupal\Core\Path\PathMatcherInterface $matcher
-   *   The path matcher class.
    */
-  public function __construct(Settings $settings, PathMatcherInterface $matcher) {
+  public function __construct(Settings $settings) {
     $this->settings = $settings;
     $this->pathMatcher = $matcher;
 
-    // @TODO: Define the rules as services so we can inject dependencies.
+    // @TODO: Rules should be passed in so this can be reused.
     $this->rules = [
       'ip' => new IpRule(),
       'path' => new PathRule(),
