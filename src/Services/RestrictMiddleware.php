@@ -46,27 +46,27 @@ class RestrictMiddleware implements HttpKernelInterface {
 
     if (PHP_SAPI === 'cli') {
       // Don't apply restrictions to cli requests ie. Drush.
-      return $this->httpKernel->handle($request, $type, $catch);
+      return parent::handle($request, $type, $catch);
     }
 
     // Set the RestrictManager request context.
     $this->manager->setRequest($request);
 
     if (!$this->manager->isAuthorised()) {
-      return new Response(SafeMarkup::format('401 Unauthorized: Access Denied (@ip)', ['@ip' => $ip]), 401);
+      return new Response(SafeMarkup::format('401 Unauthorized: Access Denied (@ip)', ['@ip' => $request->getClientIp()]), 401);
     }
 
     switch ($this->manager->isRestricted()) {
       case RestrictManager::RESTRICT_NOT_FOUND:
-        return new Response(SafeMarkup::format('<h1>Not Found</h1><p>The requested URL @path was not found on this server.</p>', ['@path' => $path]), 404);
+        return new Response(SafeMarkup::format('<h1>Not Found</h1><p>The requested URL @path was not found on this server.</p>', ['@path' => $request->getCurrentPath()]), 404);
         break;
       case RestrictManager::RESTRICT_UNAUTHORISED:
-        return new Response(SafeMarkup::format('403 Forbidden: Access Deined (@ip)', ['@ip' => $ip]), 403);
+        return new Response(SafeMarkup::format('403 Forbidden: Access Deined (@ip)', ['@ip' => $request->getClientIp()]), 403);
         break;
     }
 
     // Process the request normally.
-    return $this->httpKernel->handle($request, $type, $catch);
+    return parent::handle($request, $type, $catch);
   }
 
 }
