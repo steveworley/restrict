@@ -1,12 +1,17 @@
 {
-  "name": "drupal/ip_restrict",
+  "name": "drupal/restrict",
   "description":" HTTP Middleware to handle IP and path restrictions",
   "minimum-stability": "stable",
   "license": "GPL2",
+  "keywords": ["drupal", "whitelist", "blacklist", "restrict"],
+  "homepage": "http://github.com/steveworley/restrict",
+  "require": {
+    "php": ">=5.4.0"
+  },
   "authors": [
     {
       "name": "Steve Worley",
-      "email": "steven.worley@acquia.com"
+      "email": "sj.worley88@gmail.com"
     },
     {
       "name": "Adam Malone",

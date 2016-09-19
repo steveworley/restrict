@@ -7,4 +7,4 @@ services:
 
   restrict.manager:
     class: Drupal\restrict\RestrictManager
-    arguments: [ @settings, @path.matcher ]
+    arguments: [ @settings ]

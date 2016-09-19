@@ -14,20 +14,6 @@ interface RestrictManagerInterface {
   function setRequest(Request $request);
 
   /**
-   * Determines if the request path is restricted.
-   *
-   * @return boolean
-   */
-  function isRestrictedPath($path);
-
-  /**
-   * Determines if the request IP is restricted.
-   *
-   * @return boolean
-   */
-  function isRestrictedIp($ip);
-
-  /**
    * Negotiates a basic authentication check.
    *
    * @return boolean
