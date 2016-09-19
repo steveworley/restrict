@@ -8,9 +8,13 @@
 namespace Drupal\Tests\restrict\Unit;
 
 use Drupal\restrict\Rules\PathRule;
+use Drupal\Tests\UnitTestCase;
 
 /**
- * @coversDefaultClass \Drupal\restrict\PathRule
+ * Unit tests for path matching.
+ *
+ * @coversDefaultClass \Drupal\restrict\Rules\PathRule
+ * @group restrict
  */
 class PathRuleTest extends UnitTestCase {
 

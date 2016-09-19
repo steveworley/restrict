@@ -8,9 +8,13 @@
 namespace Drupal\Tests\restrict\Unit;
 
 use Drupal\restrict\Rules\IpRule;
+use Drupal\Tests\UnitTestCase;
 
 /**
- * @coversDefaultClass \Drupal\restrict\IpRule
+ * Unit tests for IP checking.
+ *
+ * @coversDefaultClass \Drupal\restrict\Rules\IpRule
+ * @group restrict
  */
 class IpRuleTest extends UnitTestCase {
 

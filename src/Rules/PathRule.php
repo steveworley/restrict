@@ -5,7 +5,7 @@
  * Contains Drupal\restrict\IpRule.
  */
 
-namesapce Drupal\restrict\Rules;
+namespace Drupal\restrict\Rules;
 
 use Drupal\restrict\Rules\RulesInterface;
 
@@ -22,7 +22,7 @@ class PathRule extends RulesInterface {
 
     // We have to convert the array into a set of patterns separated by a newline.
     $paths = implode("\n", $this->get('paths'));
-    return Drupal::service('path.matcher')->matchPath($this->get('current_path'), $paths);
+    return \Drupal::service('path.matcher')->matchPath($this->get('current_path'), $paths);
   }
 
 }

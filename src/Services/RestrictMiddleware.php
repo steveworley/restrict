@@ -55,7 +55,7 @@ class RestrictMiddleware implements HttpKernelInterface {
     // Don't apply restrictions to cli requests ie. Drush.
     if (PHP_SAPI === 'cli') {
       // Don't apply restrictions to cli requests ie. Drush.
-      return parent::handle($request, $type, $catch);
+      return $this->httpKernel->handle($request, $type, $catch);
     }
 
     // Set the RestrictManager request context.
@@ -80,6 +80,6 @@ class RestrictMiddleware implements HttpKernelInterface {
     }
 
     // Process the request normally.
-    return parent::handle($request, $type, $catch);
+    return $this->httpKernel->handle($request, $type, $catch);
   }
 }

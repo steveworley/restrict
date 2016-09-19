@@ -5,7 +5,7 @@
  * Contains Drupal\restrict\IpRule.
  */
 
-namesapce Drupal\restrict\Rules;
+namespace Drupal\restrict\Rules;
 
 use Drupal\restrict\Rules\RulesInterface;
 

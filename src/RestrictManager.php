@@ -151,7 +151,7 @@ class RestrictManager implements RestrictManagerInterface {
     // @TODO do we want to check for restricted routes?
     if (!empty($this->getRestrictedPaths())) {
       // $config['system.performance']['cache']['page']['max_age'] = 0;
-      $this->rules['path']->set('current_path', $this->request->getCurrentPath());
+      $this->rules['path']->set('current_path', $this->request->getRequestUri());
       $this->rules['path']->set('paths', $this->getRestrictedPaths());
 
       if ($this->rules['path']->assert()) {

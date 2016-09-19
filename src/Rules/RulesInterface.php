@@ -7,14 +7,14 @@
 
 namespace Drupal\restrict\Rules;
 
-abstract class RulesInsterface {
+abstract class RulesInterface {
 
   /**
    * Magic setter.
    * @param [type] $key   [description]
    * @param [type] $value [description]
    */
-  public function __set($key, $value) {
+  public function set($key, $value) {
     $this->{strtolower($key)} = $value;
     return $this;
   }
@@ -24,7 +24,7 @@ abstract class RulesInsterface {
    * @param  [type] $key [description]
    * @return [type]      [description]
    */
-  public function __get($key) {
+  public function get($key) {
     return isset($this->{strtolower($key)}) ? $this->{strtolower($key)} : [];
   }
 
@@ -33,6 +33,6 @@ abstract class RulesInsterface {
    *
    * @return boolean
    */
-  public function assert();
+  abstract public function assert();
 
 }
