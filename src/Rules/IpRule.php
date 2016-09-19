@@ -16,7 +16,7 @@ class IpRule extends RulesInterface {
    */
   public function assert() {
     $ip = $this->get('ip');
-    foreach ($this->get('list') as $i\tem) {
+    foreach ($this->get('list') as $item) {
 
       // Match IPs in CIDR format.
       if (strpos($item, '/') !== false) {
