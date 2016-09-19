@@ -18,6 +18,12 @@ class PathRule extends RulesInterface {
    */
   public function assert() {
 
+    // @TODO do we want to use a strtolower here? e.g. $pages = Unicode::strtolower($this->configuration['pages']);
+    // @TODO dependency inject the PathMatcher instead of duplicating this function.
+
+    // We have to convert the array into a set of patterns separated by a newline.
+    // $restrictedPaths = implode("\n", $this->getRestrictedPaths());
+
     // Borrow some code from drupal_match_path()
     foreach ($this->get('paths') as &$path) {
       $path = preg_quote($path, '/');

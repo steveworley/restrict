@@ -6,7 +6,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Drupal\restrict\RestrictManager;
-use Drupal\Component\Utility\SafeMarkup;
+use Drupal\Component\Render\FormattableMarkup;
 /**
  * Provides support for IP restrictions.
  */
@@ -20,11 +20,19 @@ class RestrictMiddleware implements HttpKernelInterface {
   protected $httpKernel;
 
   /**
-   * The decorated kernel.
+   * The site settings.
    *
-   * @var \Symfony\Component\HttpKernel\HttpKernelInterface
+   * @var \Drupal\Core\Site\Settings.
    */
   protected $settings;
+
+
+  /**
+   * The restrict manager.
+   *
+   * @var \Drupal\restrict\RestrictManagerInterface
+   */
+  protected $restrictManager;
 
   /**
    * Constructs a RestrictMiddleware object.
@@ -36,7 +44,7 @@ class RestrictMiddleware implements HttpKernelInterface {
    */
   public function __construct(HttpKernelInterface $http_kernel, RestrictManager $manager) {
     $this->httpKernel = $http_kernel;
-    $this->manager = $manager;
+    $this->restrictManager = $manager;
   }
 
   /**
@@ -44,29 +52,34 @@ class RestrictMiddleware implements HttpKernelInterface {
    */
   public function handle(Request $request, $type = self::MASTER_REQUEST, $catch = TRUE) {
 
+    // Don't apply restrictions to cli requests ie. Drush.
     if (PHP_SAPI === 'cli') {
       // Don't apply restrictions to cli requests ie. Drush.
       return parent::handle($request, $type, $catch);
     }
 
     // Set the RestrictManager request context.
-    $this->manager->setRequest($request);
+    $this->restrictManager->setRequest($request);
 
-    if (!$this->manager->isAuthorised()) {
-      return new Response(SafeMarkup::format('401 Unauthorized: Access Denied (@ip)', ['@ip' => $request->getClientIp()]), 401);
+    if (!$this->restrictManager->isAuthorised()) {
+      $response = new Response();
+      $response->headers->set('WWW-Authenticate', sprintf('Basic realm="%s"', $request->getHttpHost()));
+      $response->setContent(new FormattableMarkup('401 Unauthorized: Access Denied (@ip)', ['@ip' => $request->getClientIp()]));
+      $response->setStatusCode(401);
+      return $response;
     }
 
-    switch ($this->manager->isRestricted()) {
+    // @TODO should isRestricted be a property not a function?
+    switch ($this->restrictManager->isRestricted()) {
       case RestrictManager::RESTRICT_NOT_FOUND:
-        return new Response(SafeMarkup::format('<h1>Not Found</h1><p>The requested URL @path was not found on this server.</p>', ['@path' => $request->getCurrentPath()]), 404);
+        return new Response(new FormattableMarkup('<h1>Not Found</h1><p>The requested URL @path was not found on this server.</p>', ['@path' => $request->getPathInfo()]), 404);
         break;
-      case RestrictManager::RESTRICT_UNAUTHORISED:
-        return new Response(SafeMarkup::format('403 Forbidden: Access Deined (@ip)', ['@ip' => $request->getClientIp()]), 403);
+      case RestrictManager::RESTRICT_FORBIDDEN:
+        return new Response(new FormattableMarkup('403 Forbidden: Access Denied (@ip)', ['@ip' => $request->getClientIp()]), 403);
         break;
     }
 
     // Process the request normally.
     return parent::handle($request, $type, $catch);
   }
-
 }

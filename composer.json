@@ -1,13 +1,17 @@
 {
   "name": "drupal/ip_restrict",
-  "description":" HTTP Middleware to handle IP restrictions",
+  "description":" HTTP Middleware to handle IP and path restrictions",
   "minimum-stability": "stable",
   "license": "GPL2",
   "authors": [
     {
       "name": "Steve Worley",
       "email": "sj.worley88@gmail.com"
+    },
+    {
+      "name": "Adam Malone",
+      "email": "adam@adammalone.net"
     }
   ],
-  "type": "drupal-module",
+  "type": "drupal-module"
 }
