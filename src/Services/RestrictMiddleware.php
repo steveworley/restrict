@@ -63,7 +63,6 @@ class RestrictMiddleware implements HttpKernelInterface {
 
     // Don't apply restrictions to cli requests ie. Drush.
     if ($this->isCli()) {
-      // Don't apply restrictions to cli requests ie. Drush.
       return $this->httpKernel->handle($request, $type, $catch);
     }
 
