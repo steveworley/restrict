@@ -178,10 +178,8 @@ class RestrictManager implements RestrictManagerInterface {
     $password = $this->request->headers->get('PHP_AUTH_PW');
 
     if (isset($username) && isset($password)) {
-      foreach ($allowedCredentials as $phpAuthUser => $phpAuthPassword) {
-        if ($username == $phpAuthUser && $password == $phpAuthPassword) {
-          return TRUE;
-        }
+      if (isset($allowedCredentials[$username]) && $allowedCredentials[$username] == $password) {
+        return TRUE;
       }
     }
 
