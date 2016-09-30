@@ -14,16 +14,38 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Drupal\Core\Site\Settings;
 
+/**
+ * Unit tests for RestrictMiddleware.
+ *
+ * @coversDefaultClass \Drupal\restrict\Services\RestrictMiddleware;
+ * @group restrict
+ */
 class RestrictMiddlewareTest extends UnitTestCase {
 
+  /**
+   * A HTTP Kernel.
+   *
+   * @var Symfony\Component\HttpKernel\HttpKernelInterface
+   */
   protected $kernel;
 
+  /**
+   * The restrict manager object.
+   *
+   * @var Drupal\restrict\RestrictManager
+   */
   protected $restrictManager;
 
+  /**
+   * The restrict middleware.
+   *
+   * @var Drupal\restrict\Services\RestrictMiddleware
+   */
   protected $restrictMiddleware;
 
-  protected $settings;
-
+  /**
+   * Build the objects during setup of the test.
+   */
   public function setup() {
     parent::setup();
 
@@ -109,6 +131,9 @@ class RestrictMiddlewareTest extends UnitTestCase {
     $this->assertEquals(404, $response->getStatusCode());
   }
 
+  /**
+   * Test no configuration request handling.
+   */
   public function testDefaultRouteHandling() {
     $request = Request::create('/test-path');
 
