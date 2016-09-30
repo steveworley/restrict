@@ -22,7 +22,7 @@ install:
   - export PATH="$HOME/.composer/vendor/bin:$PATH"
 
   # Install Drush
-  - composer global require drush/drush:dev-master
+  - composer global require drush/drush
   - phpenv rehash
 
   # Create MySQL Database
