@@ -2,6 +2,7 @@
 
 namespace Drupal\restrict\Services;
 
+use Drupal\restrict\RestrictManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
@@ -42,7 +43,7 @@ class RestrictMiddleware implements HttpKernelInterface {
    * @param \Drupal\Core\Site\Settings $settings
    *   The site settings.
    */
-  public function __construct(HttpKernelInterface $http_kernel, RestrictManager $manager) {
+  public function __construct(HttpKernelInterface $http_kernel, RestrictManagerInterface $manager) {
     $this->httpKernel = $http_kernel;
     $this->restrictManager = $manager;
   }

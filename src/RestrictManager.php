@@ -43,7 +43,6 @@ class RestrictManager implements RestrictManagerInterface {
    */
   public function __construct(Settings $settings) {
     $this->settings = $settings;
-    $this->pathMatcher = $matcher;
 
     // @TODO: Rules should be passed in so this can be reused.
     $this->rules = [
@@ -53,7 +52,26 @@ class RestrictManager implements RestrictManagerInterface {
   }
 
   /**
-   * [setRequest description]
+   * Getter for the Settings object.
+   *
+   * @return \Drupal\Core\Site\Settings
+   */
+  public function getSettings() {
+    return $this->settings;
+  }
+
+  /**
+   * Getter for the rules defined for the manager.
+   *
+   * @return array
+   */
+  public function getRules($name = NULL) {
+    return isset($this->rules[$name]) ? $this->rules[$name] : $this->rules;
+  }
+
+  /**
+   * Set the request context for this object.
+   *
    * @param Request $request
    */
   public function setRequest(Request $request) {
@@ -61,51 +79,102 @@ class RestrictManager implements RestrictManagerInterface {
   }
 
   /**
-   * [getWhitelist description]
-   * @return array [description]
+   * Getter for the request context.
+   *
+   * @return \Symfony\Component\HttpFoundation\Request
    */
-  protected function getWhitelist() {
-    return $this->settings->get('restrict_whitelist', []);
+  public function getRequest() {
+    return $this->request;
   }
 
   /**
-   * [getBlacklist description]
-   * @return array [description]
-   */
-  protected function getBlacklist() {
-    return $this->settings->get('restrict_blacklist', []);
-  }
-
-  /**
-   * [getBasicAuthCredentials description]
-   * @return array [description]
-   */
-  protected function getBasicAuthCredentials() {
-    return $this->settings->get('restrict_basic_auth_credentials', []);
-  }
-
-  /**
-   * [getRestrictedPaths description]
+   * Get the whitelist property from settings.
+   *
+   * @TODO: validation.
+   *
    * @return array
+   *   A list of whitelisted IPs.
    */
-  protected function getRestrictedPaths() {
-    return $this->settings->get('restrict_restricted_paths', []);
+  public function getWhitelist() {
+    $ip_list = $this->getSettings()->get('restrict_whitelist', []);
+    return $ip_list;
   }
 
   /**
-   * [getResponseCode description]
-   * @return [type] [description]
+   * Get the blacklist property from settings.
+   *
+   * @TODO: validation.
+   *
+   * @return array
+   *   A list of blacklisted IPs.
    */
-  protected function getResponseCode() {
-    return $this->settings->get('restrict_response_code', self::RESTRICT_FORBIDDEN);
+  public function getBlacklist() {
+    $ip_list = $this->getSettings()->get('restrict_blacklist', []);
+    return $ip_list;
   }
 
   /**
-   * [getTrustedProxies description]
-   * @return [type] [description]
+   * Get the basic auth credentials from settings.
+   *
+   * @TODO: validation.
+   *
+   * @return array
+   *   An array of valid users.
    */
-  protected function getTrustedProxies() {
+  public function getBasicAuthCredentials() {
+    $credentails = $this->getSettings()->get('restrict_basic_auth_credentials', []);
+    return $credentails;
+  }
+
+  /**
+   * Get the restricted paths from settings.
+   *
+   * @TODO: validation.
+   *
+   * @return array
+   *   A list of paths to restrict.
+   */
+  public function getRestrictedPaths() {
+    $paths = $this->getSettings()->get('restrict_restricted_paths', []);
+    return $paths;
+  }
+
+  /**
+   * Get the return response code.
+   *
+   * @TODO: validation.
+   *
+   * @return int
+   *   The return response code.
+   */
+  public function getResponseCode() {
+    $code = $this->getSettings()->get('restrict_response_code', self::RESTRICT_FORBIDDEN);
+    return $code;
+  }
+
+  /**
+   * Get the trusted proxy information.
+   *
+   * @TODO: validation.
+   *
+   * @return array
+   *   A list of valid proxy IPs.
+   */
+  public function getTrustedProxies() {
     return $this->settings->get('restrict_trusted_proxies', []);
+  }
+
+  /**
+   * Set trusted proxies for the request object.
+   */
+  public function setRequestTrustedProxies() {
+    $request = $this->getRequest();
+
+    $proxies = !empty($this->getTrustedProxies())
+      ? $this->getTrustedProxies()
+      : $request->server->get('REMOTE_ADDR');
+
+    Request::setTrustedProxies($proxies);
   }
 
   /**
@@ -113,26 +182,22 @@ class RestrictManager implements RestrictManagerInterface {
    */
   public function isRestricted() {
 
-    $ip = $this->request->getClientIp();
+    $ip = $this->getRequest()->getClientIp();
 
     if (empty($ip)) {
       return $this->getResponseCode();
     }
 
-    if (!empty($this->getTrustedProxies())) {
-      $this->request->setTrustedProxies($this->getTrustedProxies());
-    }
-    else {
-      $this->request->setTrustedProxies([$this->request->server->get('REMOTE_ADDR')]);
-    }
+    // Set the trusted proxies for this request.
+    $this->setRequestTrustedProxies();
 
     // Set the IP context.
-    $this->rules['ip']->set('ip', $ip);
+    $this->getRules('ip')->set('ip', $ip);
 
     if (!empty($this->getWhitelist())) {
-      $this->rules['ip']->set('list', $this->getWhitelist());
+      $this->getRules('ip')->set('list', $this->getWhitelist());
 
-      if ($this->rules['ip']->assert()) {
+      if ($this->getRules('ip')->assert()) {
         // If the requesting IP is found in the IP whitelist this request should
         // not be restricted so we return early.
         return FALSE;
@@ -140,21 +205,19 @@ class RestrictManager implements RestrictManagerInterface {
     }
 
     if (!empty($this->getBlacklist())) {
-      $this->rules['ip']->set('list', $this->getBlacklist());
+      $this->getRules('ip')->set('list', $this->getBlacklist());
 
-      if ($this->rules['ip']->assert()) {
+      if ($this->getRules('ip')->assert()) {
         // If the IP is in the blacklist, we have a restricted IP.
         return $this->getResponseCode();
       }
     }
 
-    // @TODO do we want to check for restricted routes?
     if (!empty($this->getRestrictedPaths())) {
-      // $config['system.performance']['cache']['page']['max_age'] = 0;
-      $this->rules['path']->set('current_path', $this->request->getRequestUri());
-      $this->rules['path']->set('paths', $this->getRestrictedPaths());
+      $this->getRules('path')->set('current_path', $this->getRequest()->getRequestUri());
+      $this->getRules('path')->set('paths', $this->getRestrictedPaths());
 
-      if ($this->rules['path']->assert()) {
+      if ($this->getRules('path')->assert()) {
         return $this->getResponseCode();
       }
     }
@@ -174,8 +237,8 @@ class RestrictManager implements RestrictManagerInterface {
       return TRUE;
     }
 
-    $username = $this->request->headers->get('PHP_AUTH_USER');
-    $password = $this->request->headers->get('PHP_AUTH_PW');
+    $username = $this->getRequest()->headers->get('PHP_AUTH_USER');
+    $password = $this->getRequest()->headers->get('PHP_AUTH_PW');
 
     if (isset($username) && isset($password)) {
       if (isset($allowedCredentials[$username]) && $allowedCredentials[$username] == $password) {
