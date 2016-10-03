@@ -10,9 +10,9 @@ use Drupal\Tests\UnitTestCase;
 use Drupal\restrict\RestrictManager;
 
 /**
- * Unit tests for IP checking.
+ * Unit tests for RestrictManager.
  *
- * @coversDefaultClass2 \Drupal\restrict\RestrictManager;
+ * @coversDefaultClass \Drupal\restrict\RestrictManager
  * @group restrict
  */
 class RestrictManagerTest extends UnitTestCase {
@@ -27,11 +27,13 @@ class RestrictManagerTest extends UnitTestCase {
       ->disableOriginalConstructor()
       ->getMock();
 
+    // Setup a mock for $request->request parameter bag.
     $params = $this->getMockBuilder('Symfony\Component\HttpFoundation\ParameterBag')
       ->disableOriginalConstructor()
       ->setMethods(['getClientIp', 'getRequestUri'])
       ->getMock();
 
+    // Setup a mock for $request->server parameter bag.
     $server = $this->getMockBuilder('Symfony\Component\HttpFoundation\ParameterBag')
       ->disableOriginalConstructor()
       ->setMethods(['get'])
@@ -42,6 +44,7 @@ class RestrictManagerTest extends UnitTestCase {
       ->with('REMOTE_ADDR')
       ->willReturn('127.0.0.1');
 
+    // Setup a mock for $request->headers parameter bag.
     $headers = $this->getMockBuilder('Symfony\Component\HttpFoundation\ParameterBag')
       ->disableOriginalConstructor()
       ->setMethods(['get'])
