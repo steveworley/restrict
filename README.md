@@ -1,5 +1,7 @@
 # Restrict
 
+[![Build Status](https://travis-ci.org/steveworley/restrict.svg?branch=master)](https://travis-ci.org/steveworley/restrict)
+
 HTTP Middleware to handle IP and path restrictions.
 
 ## Installation
