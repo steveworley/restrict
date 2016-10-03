@@ -12,7 +12,7 @@ use Drupal\restrict\RestrictManager;
 /**
  * Unit tests for RestrictManager.
  *
- * @coversDefaultClass \Drupal\restrict\RestrictManager;
+ * @coversDefaultClass \Drupal\restrict\RestrictManager
  * @group restrict
  */
 class RestrictManagerTest extends UnitTestCase {

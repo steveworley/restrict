@@ -17,7 +17,7 @@ use Drupal\Core\Site\Settings;
 /**
  * Unit tests for RestrictMiddleware.
  *
- * @coversDefaultClass \Drupal\restrict\Services\RestrictMiddleware;
+ * @coversDefaultClass \Drupal\restrict\Services\RestrictMiddleware
  * @group restrict
  */
 class RestrictMiddlewareTest extends UnitTestCase {
@@ -49,8 +49,8 @@ class RestrictMiddlewareTest extends UnitTestCase {
   public function setup() {
     parent::setup();
 
-    $this->kernel = $this->getMock('Symfony\Component\HttpKernel\HttpKernelInterface');
-    $this->restrictManager = $this->getMock('Drupal\restrict\RestrictManagerInterface');
+    $this->kernel = $this->createMock('Symfony\Component\HttpKernel\HttpKernelInterface');
+    $this->restrictManager = $this->createMock('Drupal\restrict\RestrictManagerInterface');
     $this->restrictMiddleware = $this->getMockBuilder('Drupal\restrict\Services\RestrictMiddleware')
       ->setConstructorArgs([$this->kernel, $this->restrictManager])
       ->setMethods(['isCli'])
