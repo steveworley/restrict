@@ -1,6 +1,6 @@
 {
-  "name": "drupal/restrict",
-  "description":" HTTP Middleware to handle IP and path restrictions",
+  "name": "steveworley/restrict",
+  "description": "Drupal 8 HTTP Middleware to handle IP and path restrictions",
   "minimum-stability": "stable",
   "license": "GPL2",
   "keywords": ["drupal", "whitelist", "blacklist", "restrict"],
