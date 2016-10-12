@@ -2,11 +2,12 @@
 
 namespace Drupal\restrict;
 
-use Drupal\Core\Path\PathMatcherInterface;
+use Psr\Log\LoggerInterface;
 use Drupal\Core\Site\Settings;
-use Symfony\Component\HttpFoundation\Request;
 use Drupal\restrict\Rules\IpRule;
 use Drupal\restrict\Rules\PathRule;
+use Symfony\Component\HttpFoundation\Request;
+use \InvalidArgumentException;
 
 class RestrictManager implements RestrictManagerInterface {
 
@@ -36,13 +37,21 @@ class RestrictManager implements RestrictManagerInterface {
   protected $rules;
 
   /**
+   * The logger object.
+   *
+   * @var \Psr\Log\LoggerInterface
+   */
+  protected $logger;
+
+  /**
    * Construct the RestrictManager object.
    *
    * @param \Drupal\Core\Site\Settings $settings
    *   Site settings.
    */
-  public function __construct(Settings $settings) {
+  public function __construct(Settings $settings, LoggerInterface $logger) {
     $this->settings = $settings;
+    $this->logger = $logger;
 
     // @TODO: Rules should be passed in so this can be reused.
     $this->rules = [
@@ -90,52 +99,71 @@ class RestrictManager implements RestrictManagerInterface {
   /**
    * Get the whitelist property from settings.
    *
-   * @TODO: validation.
-   *
    * @return array
    *   A list of whitelisted IPs.
    */
   public function getWhitelist() {
     $ip_list = $this->getSettings()->get('restrict_whitelist', []);
+
+    if (!is_array($ip_list)) {
+      $this->logger->handleInvalidConfiguration('restrict_restricted_paths', 'array', gettype($ip_list));
+      $ip_list = [$ip_list];
+    }
+
     return $ip_list;
   }
 
   /**
    * Get the blacklist property from settings.
    *
-   * @TODO: validation.
-   *
    * @return array
    *   A list of blacklisted IPs.
    */
   public function getBlacklist() {
     $ip_list = $this->getSettings()->get('restrict_blacklist', []);
+
+    if (!is_array($ip_list)) {
+      $this->logger->handleInvalidConfiguration('restrict_restricted_paths', 'array', gettype($ip_list));
+      $ip_list = [$ip_list];
+    }
+
     return $ip_list;
   }
 
   /**
    * Get the basic auth credentials from settings.
    *
-   * @TODO: validation.
-   *
    * @return array
    *   An array of valid users.
    */
   public function getBasicAuthCredentials() {
     $credentails = $this->getSettings()->get('restrict_basic_auth_credentials', []);
+
+    if (!is_array($credentails)) {
+      throw new InvalidArgumentException('restrict_basic_auth_credentials must be an associative array.');
+    }
+
+    if (array_keys($credentails) === range(0, count($credentails) -1)) {
+      throw new InvalidArgumentException('restrict_basic_auth_credentials must be an associative array.');
+    }
+
     return $credentails;
   }
 
   /**
    * Get the restricted paths from settings.
    *
-   * @TODO: validation.
-   *
    * @return array
    *   A list of paths to restrict.
    */
   public function getRestrictedPaths() {
     $paths = $this->getSettings()->get('restrict_restricted_paths', []);
+
+    if (!is_array($paths)) {
+      $this->logger->handleInvalidConfiguration('restrict_restricted_paths', 'array', gettype($path));
+      $paths = [$path];
+    }
+
     return $paths;
   }
 
@@ -148,32 +176,54 @@ class RestrictManager implements RestrictManagerInterface {
    *   The return response code.
    */
   public function getResponseCode() {
-    $code = $this->getSettings()->get('restrict_response_code', self::RESTRICT_FORBIDDEN);
+    $code = $this->getSettings()->get('restrict_response_code', 'RESTRICT_FORBIDDEN');
+
+    $valid_response_codes = [
+      'RESTRICT_NOT_FOUND',
+      'RESTRICT_FORBIDDEN',
+      'RESTRICT_UNAUTHORISED',
+    ];
+
+    if (!in_array($code, $valid_response_codes)) {
+      $this->logger->handleInvalidConfiguration('restrict_response_code', join(', ', $valid_response_codes), $code);
+      $code = 'RESTRICT_FORBIDDEN';
+    }
+
+    $code = \constant("self::{$code}");
     return $code;
   }
 
   /**
    * Get the trusted proxy information.
    *
-   * @TODO: validation.
-   *
    * @return array
    *   A list of valid proxy IPs.
    */
   public function getTrustedProxies() {
-    return $this->settings->get('restrict_trusted_proxies', []);
+    $proxies = $this->settings->get('restrict_trusted_proxies', []);
+
+    if (!is_array($proxies)) {
+      $this->logger->handleInvalidConfiguration('restrict_trusted_proxies', 'array', gettype($proxies));
+      $proxies = [$proxies];
+    }
+
+    return $proxies;
   }
 
   /**
    * Set trusted proxies for the request object.
    */
   public function setRequestTrustedProxies() {
+
+    // Ensure that trusted proxies are only set if they haven't been set prior.
+    if (Request::getTrustedProxies()) {
+      return;
+    }
+
     $request = $this->getRequest();
+    $trusted_proxies = $this->getTrustedProxies();
 
-    $proxies = !empty($this->getTrustedProxies())
-      ? $this->getTrustedProxies()
-      : $request->server->get('REMOTE_ADDR');
-
+    $proxies = !empty($trusted_proxies) ? $trusted_proxies : [$request->server->get('REMOTE_ADDR')];
     Request::setTrustedProxies($proxies);
   }
 

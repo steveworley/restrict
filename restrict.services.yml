@@ -5,6 +5,10 @@ services:
     tags:
       - { name: http_middleware }
 
+  logger.channel.restrict:
+    class: Drupal\restrict\Logger\RestrictChannel
+    arguments: ['restrict']
+
   restrict.manager:
     class: Drupal\restrict\RestrictManager
-    arguments: [ @settings ]
+    arguments: [ @settings, @logger.channel.restrict ]

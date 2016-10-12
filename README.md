@@ -81,14 +81,20 @@ $settings['restrict_restricted_paths'] = [
 
 Returns a 404 instead of a 403 when users are denied. This should be set to a value from the `RestrictManager` class. Possible values:
 
-- `\Drupal\restrict\RestrictManager::RESTRICT_NOT_FOUND`
-- `\Drupal\restrict\RestrictManager::RESTRICT_UNAUTHORISED`
-- `\Drupal\restrict\RestrictManager::RESTRICT_FORBIDDEN`
+- `RESTRICT_NOT_FOUND`
+- `RESTRICT_UNAUTHORISED`
+- `RESTRICT_FORBIDDEN`
 
 ``` php
-$settings['restrict_response_code'] = \Drupal\restrict\RestrictManager::RESTRICT_NOT_FOUND;
+$settings['restrict_response_code'] = 'RESTRICT_NOT_FOUND';
 ```
 
 #### `$settings['restrict_trusted_proxies'] Array`
 
-`$trusted_reverse_proxy_ips` ensures Acquia load balancers and their IPs are added to the trusted proxies list.
+`restrict_trusted_proxies` ensures Acquia load balancers and their IPs are added to the trusted proxies list.
+
+``` php
+$settings['restrict_trusted_proxies'] = [
+  '127.0.0.1',
+];
+```
