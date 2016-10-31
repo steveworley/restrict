@@ -63,17 +63,21 @@ An array of basic auth username => password combinations.
 $settings['restrict_basic_auth_credentials'] = [
   'Editor' => 'P455w0rd',
   'user' => 'password',
+  ]
 ];
 ```
 
 #### `$settings['restrict_restricted_paths'] Array`
 
-Paths which may not be accessed unless the user is on the IP whitelist. Paths should start with a leading '/'.
+Paths which may not be accessed unless the user is on the IP whitelist. Paths should start with a leading '/'. Path restrictions can have options specified by an associative array.
 
 ``` php
 $settings['restrict_restricted_paths'] = [
   '/path',
   '/path/to/restricted/resource',
+  '/path' => [
+    'auth' => ['username' => 'password'],
+   ],
 ];
 ```
 

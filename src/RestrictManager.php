@@ -6,6 +6,7 @@ use Psr\Log\LoggerInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\restrict\Rules\IpRule;
 use Drupal\restrict\Rules\PathRule;
+use Drupal\restrict\Rules\BasicAuthRule;
 use Symfony\Component\HttpFoundation\Request;
 use \InvalidArgumentException;
 
@@ -57,6 +58,7 @@ class RestrictManager implements RestrictManagerInterface {
     $this->rules = [
       'ip' => new IpRule(),
       'path' => new PathRule(),
+      'auth' => new BasicAuthRule(),
     ];
   }
 
@@ -279,23 +281,11 @@ class RestrictManager implements RestrictManagerInterface {
    * {@inheritdoc}
    */
   public function isAuthorised($username = NULL, $password = NULL) {
+    $rule = $this->getRules('auth');
 
-    $allowedCredentials = $this->getBasicAuthCredentials();
+    $rule->set('request', $this->getRequest());
+    $rule->set('credentials', $this->getBasicAuthCredentials());
 
-    // Basic auth has not been configured for this site.
-    if (empty($allowedCredentials)) {
-      return TRUE;
-    }
-
-    $username = $this->getRequest()->headers->get('PHP_AUTH_USER');
-    $password = $this->getRequest()->headers->get('PHP_AUTH_PW');
-
-    if (isset($username) && isset($password)) {
-      if (isset($allowedCredentials[$username]) && $allowedCredentials[$username] == $password) {
-        return TRUE;
-      }
-    }
-
-    return FALSE;
+    return $rule->assert();
   }
 }
