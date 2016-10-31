@@ -86,7 +86,7 @@ class BasicAuthRuleTest extends UnitTestCase {
       ->with('credentials')
       ->willReturn([]);
 
-    $this->assertTure($this->rule->assert());
+    $this->assertTrue($this->rule->assert());
   }
 
   /**
