@@ -68,7 +68,7 @@ class BasicAuthRuleTest extends UnitTestCase {
     $this->request->headers->expects($this->any())
       ->method('get')
       ->with('PHP_AUTH_PW')
-      ->willRequtr($this->password);
+      ->willReturn($this->password);
 
     // When asked the rule will access the mocked request.
     $this->rule->expects($this->any())
