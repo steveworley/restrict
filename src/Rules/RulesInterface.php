@@ -11,8 +11,13 @@ abstract class RulesInterface {
 
   /**
    * Magic setter.
-   * @param [type] $key   [description]
-   * @param [type] $value [description]
+   *
+   * @param string $key
+   *   Property for the rule.
+   * @param mixed $value
+   *   Value for the $key.
+   *
+   * @return \Drupal\restrict\Rules\RulesInterface
    */
   public function set($key, $value) {
     $this->{strtolower($key)} = $value;
@@ -21,8 +26,11 @@ abstract class RulesInterface {
 
   /**
    * Magic getter.
-   * @param  [type] $key [description]
-   * @return [type]      [description]
+   *
+   * @param string $key
+   *   The property to access.
+   *
+   * @return mixed|array
    */
   public function get($key) {
     return isset($this->{strtolower($key)}) ? $this->{strtolower($key)} : [];
