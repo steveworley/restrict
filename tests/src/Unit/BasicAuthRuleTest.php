@@ -62,29 +62,21 @@ class BasicAuthRuleTest extends UnitTestCase {
 
     $this->request->headers->expects($this->any())
       ->method('get')
-      ->with('PHP_AUTH_USER')
-      ->willReturn($this->username);
-
-    $this->request->headers->expects($this->any())
-      ->method('get')
-      ->with('PHP_AUTH_PW')
-      ->willReturn($this->password);
-
-    // When asked the rule will access the mocked request.
-    $this->rule->expects($this->any())
-      ->method('get')
-      ->with('request')
-      ->willReturn($this->request);
+      ->withConsecutive(
+        ['PHP_AUTH_USER', NULL, FALSE],
+        ['PHP_AUTH_PW', NULL, FALSE]
+      )
+      ->willReturnOnConsecutiveCalls($this->username, $this->password);
   }
 
   /**
    * Ensure that if the rule has no credentials it always passes.
    */
   public function testNoCredentials() {
-    $this->rule->expects($this->once())
+    $this->rule->expects($this->exactly(1))
       ->method('get')
-      ->with('credentials')
-      ->willReturn([]);
+      ->withConsecutive(['credentials'])
+      ->willReturnOnConsecutiveCalls([]);
 
     $this->assertTrue($this->rule->assert());
   }
@@ -93,10 +85,10 @@ class BasicAuthRuleTest extends UnitTestCase {
    * Ensure that valid credentials results in a valid rule.
    */
   public function testValidCredentials() {
-    $this->rule->expects($this->once())
+      $this->rule->expects($this->exactly(3))
       ->method('get')
-      ->with('credentials')
-      ->willreutrn([$this->username => $this->password]);
+      ->withConsecutive(['credentials'], ['request'], ['request'])
+      ->willReturnOnConsecutiveCalls([$this->username => $this->password], $this->request, $this->request);
 
     $this->assertTrue($this->rule->assert());
   }
@@ -105,10 +97,10 @@ class BasicAuthRuleTest extends UnitTestCase {
    * Ensure that invalid credentials are blocked.
    */
   public function testInvalidCredentials() {
-    $this->rule->expects($this->once())
+    $this->rule->expects($this->exactly(3))
       ->method('get')
-      ->with('credentials')
-      ->willReturn(['fake' => 'p455w0rd']);
+      ->withConsecutive(['credentials'], ['request'], ['request'])
+      ->willReturnOnConsecutiveCalls(['fake' => 'p455w0rd'], $this->request, $this->request);
 
     $this->assertFalse($this->rule->assert());
   }

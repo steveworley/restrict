@@ -42,10 +42,6 @@ trait RequestMockTrait {
       ->setMethods(['get'])
       ->getMock();
 
-    $headers->expects($this->any())
-      ->method('get')
-      ->willReturn('user');
-
     $request->server = $server;
     $request->request = $params;
     $request->headers = $headers;

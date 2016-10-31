@@ -28,6 +28,14 @@ class PathRule extends RulesInterface {
     return $rules[$rule];
   }
 
+  public function getMatcher() {
+    return \Drupal::service('path.matcher');
+  }
+
+  public function getRequest() {
+    return \Drupal::request();
+  }
+
   /**
    * Determine if a given path is valid.
    *
@@ -35,7 +43,7 @@ class PathRule extends RulesInterface {
    */
   public function assert() {
     $paths = [];
-    $matcher = \Drupal::service('path.matcher');
+    $matcher = $this->getMatcher();
 
     foreach ($this->get('paths') as $key => $value) {
       $path = is_numeric($key) ? $value : $key;
@@ -50,7 +58,7 @@ class PathRule extends RulesInterface {
 
       if ($matched && isset($opts['auth'])) {
         $auth_rule = $this->getRule('auth', [
-          'request' => \Drupal::request(),
+          'request' => $this->getRequest(),
           'credentials' => $opts['auth'],
         ]);
 

@@ -64,6 +64,11 @@ class RestrictManagerTest extends UnitTestCase {
    */
   public function testNoRequestIp() {
     $request = $this->getRequestMock();
+
+    $request->headers->expects($this->any())
+      ->method('get')
+      ->willReturn('user');
+
     $request->expects($this->once())
       ->method('getClientIp')
       ->willReturn(NULL);
@@ -90,6 +95,11 @@ class RestrictManagerTest extends UnitTestCase {
   public function testWhitelist() {
     // Setup the request mock.
     $request = $this->getRequestMock();
+
+    $request->headers->expects($this->any())
+      ->method('get')
+      ->willReturn('user');
+
     $request->expects($this->once())
       ->method('getClientIp')
       ->willReturn('10.0.0.1');
@@ -170,6 +180,11 @@ class RestrictManagerTest extends UnitTestCase {
   public function testPaths() {
     // Setup the request mock.
     $request = $this->getRequestMock();
+
+    $request->headers->expects($this->any())
+      ->method('get')
+      ->willReturn('user');
+
     $request->expects($this->once())
       ->method('getClientIp')
       ->willReturn('10.0.0.1');
@@ -276,6 +291,11 @@ class RestrictManagerTest extends UnitTestCase {
   public function testUnrestricted() {
     // Setup the request mock.
     $request = $this->getRequestMock();
+
+    $request->headers->expects($this->any())
+      ->method('get')
+      ->willReturn('user');
+
     $request->expects($this->once())
       ->method('getClientIp')
       ->willReturn('10.0.0.1');
@@ -318,20 +338,24 @@ class RestrictManagerTest extends UnitTestCase {
   /**
    * Ensure if correct credentials are given the request is authorised.
    */
-  public function testBsaicAuthWithDetails() {
-    $request = $this->getRequestMock();
-
+  public function testValidBasicAuth() {
     $manager = $this->getRestrictManagerMock()
-      ->setMethods(['getBasicAuthCredentials', 'getRequest'])
+      ->setMethods(['getBasicAuthCredentials', 'getRequest', 'getRules'])
       ->getMock();
 
-    $manager->expects($this->exactly(2))
+    $manager->expects($this->once())
       ->method('getRequest')
-      ->willReturn($request);
+      ->willReturn([]);
 
     $manager->expects($this->once())
       ->method('getBasicAuthCredentials')
-      ->willReturn(['user' => 'user']);
+      ->willReturn([]);
+
+
+    $manager->expects($this->once())
+      ->method('getRules')
+      ->with('auth')
+      ->willReturn($this->getPassRuleMock());
 
     $this->assertTrue($manager->isAuthorised());
   }
@@ -339,40 +363,24 @@ class RestrictManagerTest extends UnitTestCase {
   /**
    * Ensure that requests are restricted if auth fails.
    */
-  public function testUnauthorisedWithDetails() {
-    $request = $this->getRequestMock();
-
+  public function testInvalidBasicAuth() {
     $manager = $this->getRestrictManagerMock()
-      ->setMethods(['getBasicAuthCredentials', 'getRequest'])
+      ->setMethods(['getBasicAuthCredentials', 'getRequest', 'getRules'])
       ->getMock();
-
-    $manager->expects($this->exactly(2))
-      ->method('getRequest')
-      ->willReturn($request);
 
     $manager->expects($this->once())
-      ->method('getBasicAuthCredentials')
-      ->willReturn(['user' => 'password']);
-
-    $this->assertFalse($manager->isAuthorised());
-  }
-
-  /**
-   * Ensure that requests aren't restricted if no auth is defined.
-   */
-  public function testUndefinedAuth() {
-    $request = $this->getRequestMock();
-
-    $manager = $this->getRestrictManagerMock()
-      ->setMethods(['getBasicAuthCredentials', 'getRequest'])
-      ->getMock();
-
-    $manager->expects($this->never())->method('getRequest');
+      ->method('getRequest')
+      ->willReturn([]);
 
     $manager->expects($this->once())
       ->method('getBasicAuthCredentials')
       ->willReturn([]);
 
-    $this->assertTrue($manager->isAuthorised());
+    $manager->expects($this->once())
+      ->method('getRules')
+      ->with('auth')
+      ->willReturn($this->getFailRuleMock());
+
+    $this->assertFalse($manager->isAuthorised());
   }
 }
