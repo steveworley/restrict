@@ -6,10 +6,6 @@ language: php
 php:
   - 5.6
 
-env:
-  - SIMPLETEST_BASE_URL=http://localhost
-  - SIMPLETEST_DB=mysql://root:@127.0.0.1/drupal
-
 mysql:
   database: drupal
   username: root
