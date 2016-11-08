@@ -9,45 +9,41 @@ php:
   - 5.6
   - 7
 
-env:
-  global:
-    # add composer's global bin directory to the path
-    # see: https://github.com/drush-ops/drush#install---composer
-    - PATH="$PATH:$HOME/.composer/vendor/bin"
-
-    # Configuration variables.
-    - DRUPAL_TI_MODULE_NAME="restrict"
-    - DRUPAL_TI_SIMPLETEST_GROUP="restrict"
-    - DRUPAL_TI_ENVIRONMENT="drupal-8"
-    - DRUPAL_TI_DB="drupal_travis_db"
-    - DRUPAL_TI_DB_URL="mysql://root:@127.0.0.1/drupal_travis_db"
-    - DRUPAL_TI_WEBSERVER_URL="http://127.0.0.1"
-    - DRUPAL_TI_WEBSERVER_PORT="8080"
-
-    # PHPUnit specific commandline arguments.
-    - DRUPAL_TI_PHPUNIT_ARGS="--group=restrict""
-
-matrix:
-  - DRUPAL_TI_RUNNERS="phpunit simpletest"
-
 mysql:
-  database: drupal_travis_db
+  database: drupal
   username: root
   encoding: utf8
 
 before_install:
+  # possibly optional
+  - sudo apt-get update > /dev/null
   - composer self-update
-  - composer global require "yanniboi/drupal_ti:dev-master"
-  - drupal-ti before_install
 
 install:
-  - drupal-ti install
+  # add composer's global bin directory to the path
+  # see: https://github.com/drush-ops/drush#install---composer
+  - export PATH="$HOME/.composer/vendor/bin:$PATH"
 
-before_script:
-  - drupal-ti before_script
+  # Install Drush
+  - composer global require drush/drush
+  - phpenv rehash
 
-script:
-  - drupal-ti script
+  # Create MySQL Database
+  - mysql -e 'create database drupal;'
 
-after_script:
-  - drupal-ti after_script
+  # Download Drupal
+  - cd ..
+  - drush dl drupal-8 --drupal-project-rename=drupal
+  - mv restrict drupal/modules
+  - cd drupal
+
+  # Install drupal default profile
+  - drush --verbose site-install --db-url=mysql://root:@127.0.0.1/drupal --yes
+  - drush en -y restrict
+  - drush rs 8080
+
+  # Move into core directory for phpunits benefit
+  - cd core
+
+# only test our module tests
+script: SIMPLETEST_BASE_URL=http://127.0.0.1:8080 SIMPLETEST_DB=mysql://root:@127.0.0.1/drupal phpunit --group restrict
