@@ -42,4 +42,4 @@ install:
   - cd core
 
 # only test our module tests
-script: phpunit --group restrict
+script: SIMPLETEST_BASE_URL=http://127.0.0.1 SIMPLETEST_DB=mysql://root:@127.0.0.1/drupal phpunit --group restrict
