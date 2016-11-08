@@ -13,7 +13,6 @@ use Drupal\Core\Site\Settings;
  * Class UnauthorisedTest
  *
  * @group restrict
- * @runTestsInSeparateProcesses
  */
 class RestrictBrowserTest extends BrowserTestBase {
 
