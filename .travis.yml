@@ -19,10 +19,13 @@ before_install:
   - phpunit --self-update
 
 install:
+
+  # Install phpunit from restrict composer.json.
+  - composer install --dev
+
   # add composer's global bin directory to the path
   # see: https://github.com/drush-ops/drush#install---composer
   - export PATH="$HOME/.composer/vendor/bin:$PATH"
-
 
   # Install Drush
   - composer global require drush/drush
@@ -43,7 +46,6 @@ install:
   - drush rs 8080 - &
 
   # Move into core directory for phpunits benefit
-  - ls -la d
   - cd core
 
 # only test our module tests
