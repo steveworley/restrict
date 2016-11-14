@@ -32,7 +32,6 @@ install:
   - mysql -e 'create database drupal;'
 
   # Download Drupal
-  - composer install
   - cd ..
   - drush dl drupal-8 --drupal-project-rename=drupal
   - mv restrict drupal/modules
@@ -44,7 +43,8 @@ install:
   - drush rs 8080 - &
 
   # Move into core directory for phpunits benefit
+  - ls -la d
   - cd core
 
 # only test our module tests
-script: SIMPLETEST_BASE_URL=http://127.0.0.1:8080 SIMPLETEST_DB=mysql://root:@127.0.0.1/drupal drupal/modules/restrict/vendor/bin/phpunit --group restrict
+script: SIMPLETEST_BASE_URL=http://127.0.0.1:8080 SIMPLETEST_DB=mysql://root:@127.0.0.1/drupal ../modules/restrict/vendor/bin/phpunit --group restrict
