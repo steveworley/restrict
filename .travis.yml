@@ -16,12 +16,15 @@ before_install:
   # possibly optional
   - sudo apt-get update > /dev/null
   - composer self-update
+  - phpunit --self-update
+
+script: drupal/modules/restrict/vendor/bin/phpunit
 
 install:
   # add composer's global bin directory to the path
   # see: https://github.com/drush-ops/drush#install---composer
   - export PATH="$HOME/.composer/vendor/bin:$PATH"
-  - phpunit --self-update
+
 
   # Install Drush
   - composer global require drush/drush
