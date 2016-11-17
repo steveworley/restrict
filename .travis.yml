@@ -31,12 +31,13 @@ install:
   - mysql -e 'create database drupal;'
 
   - mv restrict drupal/web/modules
-  - cd drupal
+  - cd drupal/web
 
   # Install drupal default profile
   - drush --verbose site-install --db-url=mysql://root:@127.0.0.1/drupal --yes
   - drush en -y restrict
   - drush rs 8080 - &
+  - cd ../
 
   # Ensure that the server is running.
   - sleep 5s
