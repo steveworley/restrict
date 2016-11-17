@@ -36,10 +36,10 @@ install:
   # Install drupal default profile
   - drush --verbose site-install --db-url=mysql://root:@127.0.0.1/drupal --yes
   - drush en -y restrict
-  - drush rs 8080 - &
+  - drush rs 8080 - > /dev/null &
   - cd ..
 
   # Ensure that the server is running.
   - sleep 5s
-  
+
 script: SIMPLETEST_BASE_URL=http://127.0.0.1:8080 SIMPLETEST_DB=mysql://root:@127.0.0.1/drupal vendor/bin/phpunit -c web/core/phpunit.xml.dist --group restrict
