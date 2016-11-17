@@ -49,8 +49,8 @@ class RestrictMiddlewareTest extends UnitTestCase {
   public function setup() {
     parent::setup();
 
-    $this->kernel = $this->createMock('Symfony\Component\HttpKernel\HttpKernelInterface');
-    $this->restrictManager = $this->createMock('Drupal\restrict\RestrictManagerInterface');
+    $this->kernel = $this->getMockBuilder('Symfony\Component\HttpKernel\HttpKernelInterface')->getMock();
+    $this->restrictManager = $this->getMockBuilder('Drupal\restrict\RestrictManagerInterface')->getMock();
     $this->restrictMiddleware = $this->getMockBuilder('Drupal\restrict\Services\RestrictMiddleware')
       ->setConstructorArgs([$this->kernel, $this->restrictManager])
       ->setMethods(['isCli'])
