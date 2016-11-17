@@ -8,10 +8,7 @@ php:
   - 7
 
 env:
-  - MYSQL="mysql://root:@127.0.0.1/drupal"
-  - PORT=8080
-  - PHPUNIT_PATH="modules/restrict/vendor/bin/phpunit"
-  - PHPUNIT_CONF="core/phpunit.xml.dist"
+  - MYSQL="mysql://root:@127.0.0.1/drupal" PORT=8080 PHPUNIT_PATH="modules/restrict/vendor/bin/phpunit" PHPUNIT_CONF="core/phpunit.xml.dist"
 
 mysql:
   database: drupal
