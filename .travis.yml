@@ -5,41 +5,41 @@ language: php
 
 php:
   - 5.6
+  - 7
 
 mysql:
   database: drupal
   username: root
   encoding: utf8
 
+env:
+  - PATH="$HOME/.composer/vendor/bin:$PATH"
+
 before_install:
   # possibly optional
   - sudo apt-get update > /dev/null
   - composer self-update
+  - composer global require drush/drush
 
 install:
-  # add composer's global bin directory to the path
-  # see: https://github.com/drush-ops/drush#install---composer
-  - export PATH="$HOME/.composer/vendor/bin:$PATH"
 
-  # Install Drush
-  - composer global require drush/drush
-  - phpenv rehash
+  # Install Drupal 8.
+  - cd ..
+  - composer create-project drupal-composer/drupal-project:8.x drupal --stability dev --no-interaction
 
   # Create MySQL Database
   - mysql -e 'create database drupal;'
 
-  # Download Drupal
-  - cd ..
-  - drush dl drupal-8 --drupal-project-rename=drupal
-  - mv restrict drupal/modules
-  - cd drupal
+  - mv restrict drupal/web/modules
+  - cd drupal/web
 
   # Install drupal default profile
   - drush --verbose site-install --db-url=mysql://root:@127.0.0.1/drupal --yes
   - drush en -y restrict
+  - drush rs 8080 - > /dev/null &
+  - cd ..
 
-  # Move into core directory for phpunits benefit
-  - cd core
+  # Ensure that the server is running.
+  - sleep 5s
 
-# only test our module tests
-script: phpunit --group restrict
+script: SIMPLETEST_BASE_URL=http://127.0.0.1:8080 SIMPLETEST_DB=mysql://root:@127.0.0.1/drupal vendor/bin/phpunit -c web/core/phpunit.xml.dist --group restrict
