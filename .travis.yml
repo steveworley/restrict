@@ -37,10 +37,10 @@ install:
   - drush --verbose site-install --db-url=mysql://root:@127.0.0.1/drupal --yes
   - drush en -y restrict
   - drush rs 8080 - &
-  - cd ../
+  - cd ..
 
   # Ensure that the server is running.
   - sleep 5s
 
 # only test our module tests
-script: SIMPLETEST_BASE_URL=http://127.0.0.1:8080 SIMPLETEST_DB=mysql://root:@127.0.0.1/drupal drupal/vendor/bin/phpunit --group restrict --configuration drupal/web/core/phpunit.xml.dist
+script: SIMPLETEST_BASE_URL=http://127.0.0.1:8080 SIMPLETEST_DB=mysql://root:@127.0.0.1/drupal vendor/bin/phpunit --group restrict --configuration web/core/phpunit.xml.dist
